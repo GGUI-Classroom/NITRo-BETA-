@@ -823,8 +823,9 @@
         if (!baseEl) {
           baseEl = doc.createElement("base");
           doc.head.prepend(baseEl);
+          baseEl.setAttribute("href", rootBase);
         }
-        baseEl.setAttribute("href", rootBase);
+        const baseHref = baseEl.getAttribute("href") || rootBase;
 
         const fixUrl = (value) => {
           if (!value) return value;
@@ -846,11 +847,7 @@
             return `${parsed.protocol}${trimmed}`;
           }
 
-          if (trimmed.startsWith("/")) {
-            return rootBase.replace(/\/$/, "") + trimmed;
-          }
-
-          return new URL(trimmed, parsed.href).href;
+          return new URL(trimmed, baseHref).href;
         };
 
         doc.querySelectorAll("[src], [href], [poster], [data], [action]").forEach((node) => {
@@ -861,6 +858,36 @@
         });
 
         return "<!doctype html>\n" + doc.documentElement.outerHTML;
+      }
+
+      function writeGameIntoFrame(html, gameUrl) {
+        const frameDoc = viewerFrame.contentDocument || viewerFrame.contentWindow?.document;
+        if (!frameDoc) {
+          viewerFrame.removeAttribute("srcdoc");
+          viewerFrame.srcdoc = rewriteGameHtml(html, gameUrl);
+          return;
+        }
+
+        const rewrittenHtml = rewriteGameHtml(html, gameUrl);
+        frameDoc.open();
+        frameDoc.write(rewrittenHtml);
+        frameDoc.close();
+      }
+
+      const blankFrameHtml = "<!doctype html><html><head><meta charset='utf-8'></head><body style='margin:0;background:#000;'></body></html>";
+
+      function resetViewerFrame() {
+        return new Promise((resolve) => {
+          const handleLoad = () => {
+            viewerFrame.removeEventListener("load", handleLoad);
+            resolve();
+          };
+
+          viewerFrame.addEventListener("load", handleLoad);
+          viewerFrame.removeAttribute("src");
+          viewerFrame.removeAttribute("srcdoc");
+          viewerFrame.srcdoc = blankFrameHtml;
+        });
       }
 
       function providerFallbackCover(name) {
@@ -957,18 +984,12 @@
         viewer.style.display = "block";
         document.body.style.overflow = "hidden";
 
-        if (baseUrl.startsWith("http")) {
-          viewerFrame.removeAttribute("srcdoc");
-          viewerFrame.src = baseUrl;
-          return;
-        }
-
         const url = baseUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        fetch(url + "?t=" + Date.now())
+        resetViewerFrame()
+          .then(() => fetch(url + "?t=" + Date.now()))
           .then((response) => response.text())
           .then((html) => {
-            viewerFrame.removeAttribute("src");
-            viewerFrame.srcdoc = html;
+            writeGameIntoFrame(html, url);
             document.getElementById("viewerTitle").textContent = file.name;
             document.getElementById("viewerTitle").dataset.zoneId = file.id;
           })
@@ -993,36 +1014,22 @@
         viewer.style.display = "block";
         document.body.style.overflow = "hidden";
 
-        if (!game.url || !/^https?:\/\//i.test(game.url)) {
-          viewerFrame.removeAttribute("srcdoc");
-          viewerFrame.src = game.url || "about:blank";
-          return;
-        }
-
         viewerTitle.textContent = `${game.name || "game"} loading...`;
 
         try {
-          const response = await fetch(game.url, { cache: "no-store" });
-          const contentType = (response.headers.get("content-type") || "").toLowerCase();
+          const resolvedUrl = String(game.url || "").replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+          await resetViewerFrame();
+          const response = await fetch(resolvedUrl, { cache: "no-store" });
           const html = await response.text();
-          const looksLikeHtml = contentType.includes("text/html") || /^\s*<!doctype html/i.test(html) || /<html[\s>]/i.test(html);
-
-          if (looksLikeHtml) {
-            viewerFrame.removeAttribute("src");
-            viewerFrame.srcdoc = rewriteGameHtml(html, game.url);
-          } else {
-            viewerFrame.removeAttribute("srcdoc");
-            viewerFrame.src = game.url;
-          }
+          writeGameIntoFrame(html, resolvedUrl);
         } catch (_) {
-          viewerFrame.removeAttribute("srcdoc");
-          viewerFrame.src = game.url;
+          await resetViewerFrame();
         }
       }
 
       function closeGame() {
         viewer.style.display = "none";
-        viewerFrame.src = "about:blank";
+        viewerFrame.srcdoc = blankFrameHtml;
         document.body.style.overflow = "auto";
         currentGame = null;
       }
