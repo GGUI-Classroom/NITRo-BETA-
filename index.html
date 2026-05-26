@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NITRo (BETA)</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #070a10;
+        --panel: #0d1118;
+        --panel-2: #101521;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f3f7ff;
+        --muted: rgba(243, 247, 255, 0.72);
+        --nitro-start: #b65cff;
+        --nitro-end: #5865f2;
+        --button: #161c2a;
+        --button-hover: #1e2740;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size: 72px 72px;
+        mask-image: radial-gradient(circle at center, black 32%, transparent 88%);
+        pointer-events: none;
+      }
+
+      .hero {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+      }
+
+      .hero-inner {
+        display: grid;
+        justify-items: center;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 0.7rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .title {
+        margin: 0;
+        padding: 0.25em 0.5em;
+        font-size: clamp(3rem, 12vw, 8rem);
+        letter-spacing: 0.12em;
+      }
+
+      .subtitle {
+        min-height: 1.5em;
+        margin: 0;
+        font-size: clamp(1rem, 2.6vw, 1.5rem);
+        letter-spacing: 0.08em;
+        text-transform: lowercase;
+        background: linear-gradient(90deg, var(--nitro-start), var(--nitro-end));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        white-space: nowrap;
+      }
+
+      .caret {
+        display: inline-block;
+        width: 0.6ch;
+        margin-left: 0.08em;
+        color: #d8dcff;
+        animation: blink 1s steps(1) infinite;
+      }
+
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      .access-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 14rem;
+        padding: 0.95rem 1.4rem;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, var(--button), var(--panel-2));
+        color: var(--text);
+        text-decoration: none;
+        text-transform: lowercase;
+        letter-spacing: 0.08em;
+        transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+      }
+
+      .access-btn:hover {
+        transform: translateY(-1px);
+        background: linear-gradient(180deg, var(--button-hover), #171d2d);
+        border-color: rgba(255, 255, 255, 0.14);
+      }
+
+      .games-section {
+        padding: 0 1.25rem 4rem;
+      }
+
+      body.suggest-mode #appMain {
+        display: none;
+      }
+
+      .suggest-page {
+        min-height: 100vh;
+        display: none;
+        place-items: center;
+        padding: 1.2rem;
+      }
+
+      body.suggest-mode .suggest-page {
+        display: grid;
+      }
+
+      .suggest-shell {
+        width: min(760px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(150deg, rgba(20, 25, 40, 0.94), rgba(13, 17, 24, 0.98));
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+      }
+
+      .suggest-head {
+        padding: 1rem 1rem 0.6rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        gap: 0.7rem;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .suggest-brand {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .suggest-sub {
+        margin: 0.35rem 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        display: none; /* removed text as requested */
+      }
+
+      .suggest-back {
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.5rem 0.85rem;
+        background: #141b2a;
+        white-space: nowrap;
+      }
+
+      .suggest-form-wrap {
+        padding: 1rem;
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .suggest-field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .suggest-label {
+        color: var(--muted);
+        font-size: 0.84rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .suggest-input,
+      .suggest-select {
+        width: 100%;
+        border: 1px solid var(--line);
+        background: #0f1420;
+        color: var(--text);
+        border-radius: 12px;
+        padding: 0.82rem 0.9rem;
+        outline: none;
+      }
+
+      .suggest-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .suggest-chip {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 0.43rem 0.7rem;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+
+      .suggest-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+      }
+
+      .suggest-submit {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: linear-gradient(180deg, var(--button), var(--panel-2));
+        color: var(--text);
+        border-radius: 999px;
+        padding: 0.6rem 1.05rem;
+        min-width: 10.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .suggest-status {
+        margin: 0;
+        color: var(--muted);
+        min-height: 1.2em;
+        font-size: 0.87rem;
+      }
+
+      .suggest-search {
+        margin-top: 0.5rem;
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .suggest-results {
+        display: grid;
+        gap: 0.4rem;
+        max-height: 240px;
+        overflow: auto;
+        padding: 0.25rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.04);
+        background: rgba(255,255,255,0.01);
+      }
+
+      .suggest-result {
+        padding: 0.55rem 0.7rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.92rem;
+        color: var(--text);
+      }
+
+      .suggest-result:hover {
+        background: rgba(255,255,255,0.02);
+      }
+
+      .games-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 1.25rem;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: rgba(13, 17, 24, 0.84);
+      }
+
+      .games-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .eyebrow {
+        margin: 0 0 0.25rem;
+        color: var(--muted);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+      }
+
+      .section-title {
+        margin: 0;
+        font-size: clamp(1.3rem, 3vw, 2rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .zone-count {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .status {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+
+      .grid-search {
+        margin: 0.4rem 0 0.8rem;
+      }
+
+
+      .control,
+      .select {
+        border: 1px solid var(--line);
+        background: #0f1420;
+        color: var(--text);
+        border-radius: 12px;
+        padding: 0.8rem 0.9rem;
+        outline: none;
+      }
+
+      .control {
+        flex: 1 1 260px;
+      }
+
+      .select {
+        flex: 0 0 auto;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+      }
+
+      .card {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: #11151d;
+        cursor: pointer;
+        transition: transform 160ms ease, border-color 160ms ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+
+      .card img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .card-label {
+        position: absolute;
+        inset: auto 0 0;
+        padding: 1rem 0.9rem 0.8rem;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.1));
+        display: grid;
+        gap: 0.2rem;
+      }
+
+      .card-label strong {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .card-label span {
+        font-size: 0.72rem;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .viewer {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        background: #000;
+      }
+
+      .viewer-bar {
+        height: 58px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 0 1rem;
+        background: #0f131b;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .viewer-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.92rem;
+      }
+
+      .viewer-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .viewer-btn {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #151b27;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 0.55rem 0.85rem;
+        cursor: pointer;
+      }
+
+      .viewer-frame {
+        width: 100%;
+        height: calc(100vh - 58px);
+        border: 0;
+        background: #000;
+      }
+
+      .empty {
+        grid-column: 1 / -1;
+        padding: 2rem;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      @media (max-width: 700px) {
+        .hero {
+          min-height: 88vh;
+        }
+
+        .access-btn {
+          min-width: 12rem;
+        }
+
+        .games-shell {
+          padding: 1rem;
+        }
+
+        .viewer-bar {
+          height: auto;
+          padding: 0.75rem;
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .viewer-frame {
+          height: calc(100vh - 112px);
+        }
+
+        .suggest-head {
+          align-items: start;
+          flex-direction: column;
+        }
+
+      }
+    </style>
+  </head>
+  <body>
+    <main id="appMain">
+      <section class="hero" id="top">
+        <div class="hero-inner">
+          <h1 class="title">NITRo (BETA)</h1>
+          <p class="subtitle" aria-live="polite"><span id="typed"></span><span class="caret">|</span></p>
+          <div class="hero-actions">
+            <a class="access-btn" href="#gamesSection" id="accessGames">access da games</a>
+            <a class="access-btn" href="#suggest" id="suggestGames">suggest a game</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="games-section" id="gamesSection" aria-label="Game vault">
+        <div class="games-shell">
+          <div class="games-top">
+            <div>
+              <p class="eyebrow">Games</p>
+            </div>
+            <p class="status" id="statusText">loading zones...</p>
+          </div>
+
+          <div class="controls">
+            <select class="select" id="sortOptions">
+              <option value="name">name</option>
+              <option value="source">source</option>
+              <option value="recent">recent</option>
+            </select>
+            <select class="select" id="gameDatabaseSelect">
+              <option value="all" selected>all zones</option>
+              <option value="zones">main feed</option>
+              <option value="recent">recent feed</option>
+              <option value="popular">popular feed</option>
+            </select>
+          </div>
+
+          <details id="allZonesWrapper" open>
+            <summary id="allSummary" class="zone-count">All Zones</summary>
+          <div class="grid-search">
+            <input class="control" id="searchBar" type="search" placeholder="search games..." />
+          </div>
+          <div class="grid" id="gameGrid">
+            <div class="empty">connecting to feeds...</div>
+          </div>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <section class="suggest-page" id="suggestPage" aria-label="Suggest a game page">
+      <div class="suggest-shell">
+        <header class="suggest-head">
+          <div>
+            <h2 class="suggest-brand">NITRo Suggestions</h2>
+            <p class="suggest-sub">Submit game ideas directly from this page.</p>
+          </div>
+          <a class="suggest-back" href="#gamesSection" id="suggestBack">back to games</a>
+        </header>
+
+        <section class="suggest-form-wrap">
+          <form id="suggestUiForm">
+            <div class="suggest-field">
+              <label class="suggest-label" for="gameName">Game name</label>
+              <input class="suggest-input" id="gameName" type="text" placeholder="Ex: Super Mario 63" required />
+            </div>
+
+            <div class="suggest-field">
+              <label class="suggest-label" for="gameType">Availability</label>
+              <select class="suggest-select" id="gameType">
+                <option value="Previous HTML">Previous HTML</option>
+                <option value="Ported">Ported</option>
+              </select>
+            </div>
+
+            <div class="suggest-actions">
+              <button class="suggest-submit" type="submit">submit suggestion</button>
+            </div>
+          </form>
+
+          <p class="suggest-status" id="suggestStatus"></p>
+        </section>
+      </div>
+    </section>
+
+    <iframe name="formSink" style="display:none" title="form submit sink"></iframe>
+    <form
+      id="gformSubmit"
+      action="https://docs.google.com/forms/d/e/1FAIpQLScc4SsvhnURtXS1F6khv8u0As8RFBmKvCbpuUNZNsGHL0U5Rw/formResponse"
+      method="POST"
+      target="formSink"
+      style="display:none"
+    >
+      <input type="hidden" name="entry.1146314585" id="entryGame" />
+      <input type="hidden" name="entry.1249168419" id="entryType" />
+    </form>
+
+    <div class="viewer" id="viewer">
+      <div class="viewer-bar">
+        <div class="viewer-title" id="viewerTitle">ready</div>
+        <div class="viewer-actions">
+          <button class="viewer-btn" id="viewerFullscreen">fullscreen</button>
+          <button class="viewer-btn" id="viewerClose">close</button>
+        </div>
+      </div>
+      <iframe class="viewer-frame" id="viewerFrame" title="game viewer"></iframe>
+    </div>
+
+    <script>
+      const phrases = ["infinite games", "deved by @_extreembuild_", "tuff fr??"];
+      const typed = document.getElementById("typed");
+      const accessGames = document.getElementById("accessGames");
+      const gameGrid = document.getElementById("gameGrid");
+      const searchBar = document.getElementById("searchBar");
+      const sortOptions = document.getElementById("sortOptions");
+      const gameDatabaseSelect = document.getElementById("gameDatabaseSelect");
+      const statusText = document.getElementById("statusText");
+      const viewer = document.getElementById("viewer");
+      const viewerFrame = document.getElementById("viewerFrame");
+      const viewerTitle = document.getElementById("viewerTitle");
+      const viewerFullscreen = document.getElementById("viewerFullscreen");
+      const viewerClose = document.getElementById("viewerClose");
+      const appMain = document.getElementById("appMain");
+      const suggestPage = document.getElementById("suggestPage");
+      const suggestUiForm = document.getElementById("suggestUiForm");
+      const gameName = document.getElementById("gameName");
+      const gameType = document.getElementById("gameType");
+      const entryGame = document.getElementById("entryGame");
+      const entryType = document.getElementById("entryType");
+      const gformSubmit = document.getElementById("gformSubmit");
+      const suggestStatus = document.getElementById("suggestStatus");
+      // suggestion helpers (UI elements removed per request)
+
+      const zonesurls = [
+        "https://cdn.jsdelivr.net/gh/freebuisness/assets@main/zones.json",
+        "https://cdn.jsdelivr.net/gh/freebuisness/assets@latest/zones.json",
+        "https://cdn.jsdelivr.net/gh/freebuisness/assets@master/zones.json",
+        "https://cdn.jsdelivr.net/gh/freebuisness/assets/zones.json",
+      ];
+      let zonesURL = zonesurls[Math.floor(Math.random() * zonesurls.length)];
+      const coverURL = "https://cdn.jsdelivr.net/gh/freebuisness/covers@main";
+      const htmlURL = "https://cdn.jsdelivr.net/gh/freebuisness/html@main";
+
+      const fallbackGames = [
+        {
+          id: 1,
+          name: "Neon Drift",
+          cover: coverFor("Neon Drift"),
+          url: "about:blank",
+          source: "NITRo",
+        },
+        {
+          id: 2,
+          name: "Static Run",
+          cover: coverFor("Static Run"),
+          url: "about:blank",
+          source: "NITRo",
+        },
+        {
+          id: 3,
+          name: "Arc Pulse",
+          cover: coverFor("Arc Pulse"),
+          url: "about:blank",
+          source: "NITRo",
+        },
+      ];
+
+      let zones = [];
+      let popularityData = {};
+      let currentGame = null;
+
+      function coverFor(name) {
+        return "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "Game") + "&background=050505&color=ffffff&size=256";
+      }
+
+      function toAbsolute(base, maybeRelative) {
+        if (!maybeRelative) return "";
+        if (/^https?:\/\//i.test(maybeRelative)) return maybeRelative;
+        return base.replace(/\/$/, "") + "/" + maybeRelative.replace(/^\//, "");
+      }
+
+      function normalizeGameUrl(url, base) {
+        if (!url) return "";
+        const absolute = toAbsolute(base, url);
+        if (absolute.endsWith("index.html") || /\.[a-z0-9]+(\?|#|$)/i.test(absolute)) {
+          return absolute;
+        }
+        return absolute.replace(/\/?$/, "/") + "index.html";
+      }
+
+      function toTitleCase(str) {
+        return String(str || "")
+          .replace(/[_-]+/g, " ")
+          .replace(/\w\S*/g, (text) => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase());
+      }
+
+      function dedupeGames(games) {
+        const seen = new Set();
+        return games.filter((game) => {
+          const key = (game.url || "") + "|" + (game.name || "").toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+
+      async function fetchPopularity(duration) {
+        try {
+          if (!popularityData[duration]) {
+            popularityData[duration] = {};
+          }
+          const response = await fetch(
+            "https://data.jsdelivr.com/v1/stats/packages/gh/freebuisness/html@main/files?period=" + duration
+          );
+          const data = await response.json();
+          data.forEach((file) => {
+            const idMatch = file.name.match(/\/(\d+)\.html$/);
+            if (idMatch) {
+              const id = parseInt(idMatch[1]);
+              popularityData[duration][id] = file.hits?.total ?? 0;
+            }
+          });
+        } catch (_) {
+          if (!popularityData[duration]) {
+            popularityData[duration] = {};
+          }
+          popularityData[duration][0] = 0;
+        }
+      }
+
+      function renderGames() {
+        const query = searchBar.value.trim().toLowerCase();
+        const sortValue = sortOptions.value;
+
+        let visibleGames = zones.slice();
+
+        if (query) {
+          visibleGames = visibleGames.filter((game) => {
+            const haystack = [game.name, game.source, game.author].filter(Boolean).join(" ").toLowerCase();
+            return haystack.includes(query);
+          });
+        }
+
+        if (sortValue === "name") {
+          visibleGames.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortValue === "source") {
+          visibleGames.sort((a, b) => (a.source || "").localeCompare(b.source || "") || a.name.localeCompare(b.name));
+        } else if (sortValue === "popular") {
+          visibleGames.sort((a, b) => ((popularityData.year?.[b.id]) ?? 0) - ((popularityData.year?.[a.id]) ?? 0));
+        } else {
+          visibleGames.sort((a, b) => (b.id || 0) - (a.id || 0));
+        }
+
+        if (!visibleGames.length) {
+          gameGrid.innerHTML = '<div class="empty">no games matched this filter.</div>';
+          statusText.textContent = zones.length ? `${zones.length} zones loaded` : "no zones loaded";
+          return;
+        }
+
+        gameGrid.innerHTML = visibleGames
+          .map((game) => {
+            const cover = String(game.cover || coverFor(game.name))
+              .replaceAll("{COVER_URL}", coverURL)
+              .replaceAll("{HTML_URL}", htmlURL);
+
+            return `
+              <article class="card" data-url="${escapeHtml(game.url)}" data-name="${escapeHtml(game.name)}">
+                <img src="${escapeHtml(cover)}" alt="${escapeHtml(game.name)} cover" loading="lazy" />
+                <div class="card-label">
+                  <strong>${escapeHtml(game.name)}</strong>
+                  <span>${escapeHtml(game.source || "NITRo")}</span>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+
+        gameGrid.querySelectorAll(".card").forEach((card) => {
+          card.addEventListener("click", () => {
+            openGame({
+              url: card.dataset.url,
+              name: card.dataset.name,
+            });
+          });
+        });
+
+        statusText.textContent = `${visibleGames.length} of ${zones.length} zones ready`;
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function getGameRootBase(gameUrl) {
+        try {
+          const parsed = new URL(gameUrl, window.location.href);
+          const matched = parsed.href.match(/^(https:\/\/cdn\.jsdelivr\.net\/gh\/[^/]+\/[^@]+@[^/]+\/)/i);
+          if (matched) {
+            return matched[1];
+          }
+
+          const path = parsed.pathname.endsWith("/") ? parsed.pathname : parsed.pathname.replace(/\/[^/]*$/, "/");
+          return `${parsed.origin}${path}`;
+        } catch (_) {
+          return window.location.href;
+        }
+      }
+
+      function rewriteGameHtml(html, gameUrl) {
+        const parsed = new URL(gameUrl, window.location.href);
+        const rootBase = getGameRootBase(parsed.href);
+        const doc = new DOMParser().parseFromString(html, "text/html");
+
+        let baseEl = doc.querySelector("base");
+        if (!baseEl) {
+          baseEl = doc.createElement("base");
+          doc.head.prepend(baseEl);
+        }
+        baseEl.setAttribute("href", rootBase);
+
+        const fixUrl = (value) => {
+          if (!value) return value;
+          const trimmed = value.trim();
+          if (
+            trimmed.startsWith("http://") ||
+            trimmed.startsWith("https://") ||
+            trimmed.startsWith("data:") ||
+            trimmed.startsWith("blob:") ||
+            trimmed.startsWith("javascript:") ||
+            trimmed.startsWith("#") ||
+            trimmed.startsWith("mailto:") ||
+            trimmed.startsWith("tel:")
+          ) {
+            return trimmed;
+          }
+
+          if (trimmed.startsWith("//")) {
+            return `${parsed.protocol}${trimmed}`;
+          }
+
+          if (trimmed.startsWith("/")) {
+            return rootBase.replace(/\/$/, "") + trimmed;
+          }
+
+          return new URL(trimmed, parsed.href).href;
+        };
+
+        doc.querySelectorAll("[src], [href], [poster], [data], [action]").forEach((node) => {
+          ["src", "href", "poster", "data", "action"].forEach((attr) => {
+            if (!node.hasAttribute(attr)) return;
+            node.setAttribute(attr, fixUrl(node.getAttribute(attr)));
+          });
+        });
+
+        return "<!doctype html>\n" + doc.documentElement.outerHTML;
+      }
+
+      function providerFallbackCover(name) {
+        return "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "Game") + "&background=050505&color=00f2ff&size=256";
+      }
+
+      function applyRouteFromHash() {
+        const inSuggest = window.location.hash === "#suggest";
+        document.body.classList.toggle("suggest-mode", inSuggest);
+        appMain.setAttribute("aria-hidden", inSuggest ? "true" : "false");
+        suggestPage.setAttribute("aria-hidden", inSuggest ? "false" : "true");
+        if (inSuggest) {
+          window.scrollTo({ top: 0, behavior: "auto" });
+        }
+      }
+
+      async function listZones() {
+        try {
+          statusText.textContent = "syncing zones...";
+          let sharesponse;
+          let shajson;
+          let sha;
+          try {
+            sharesponse = await fetch("https://api.github.com/repos/freebuisness/assets/commits?t=" + Date.now());
+          } catch (_) {}
+          if (sharesponse && sharesponse.status === 200) {
+            try {
+              shajson = await sharesponse.json();
+              sha = shajson[0]["sha"];
+              if (sha) {
+                zonesURL = `https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`;
+              }
+            } catch (_) {
+              try {
+                let secondarysharesponse = await fetch("https://raw.githubusercontent.com/freebuisness/xml/refs/heads/main/sha.txt?t=" + Date.now());
+                if (secondarysharesponse && secondarysharesponse.status === 200) {
+                  sha = (await secondarysharesponse.text()).trim();
+                  if (sha) {
+                    zonesURL = `https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`;
+                  }
+                }
+              } catch (_) {}
+            }
+          }
+
+          const response = await fetch(zonesURL + "?t=" + Date.now());
+          const json = await response.json();
+          zones = Array.isArray(json) ? json : [];
+          if (zones.length) {
+            zones[0].featured = true;
+          }
+
+          await Promise.all([fetchPopularity("year"), fetchPopularity("month"), fetchPopularity("week"), fetchPopularity("day")]);
+          zones = zones.map((zone, index) => ({
+            ...zone,
+            source: zone.source || zone.author || "zone",
+            cover: zone.cover || providerFallbackCover(zone.name),
+            id: zone.id ?? index + 1,
+          }));
+
+          renderGames();
+
+          const search = new URLSearchParams(window.location.search);
+          const id = search.get("id");
+          const embed = window.location.hash.includes("embed");
+          if (id) {
+            const zone = zones.find((item) => item.id + "" == id + "");
+            if (zone) {
+              if (embed) {
+                openZone(zone);
+              } else {
+                openZone(zone);
+              }
+            }
+          }
+        } catch (error) {
+          console.error(error);
+          zones = fallbackGames.map((game, index) => ({
+            id: index + 1,
+            name: game.name,
+            cover: game.cover,
+            url: game.url,
+            author: "NITRo",
+            source: "fallback",
+          }));
+          renderGames();
+          statusText.textContent = `error loading zones: ${error.message || error}`;
+        }
+      }
+
+      function openZone(file) {
+        const baseUrl = String(file.url || "");
+        viewerTitle.textContent = file.name || "zone";
+        viewer.style.display = "block";
+        document.body.style.overflow = "hidden";
+
+        if (baseUrl.startsWith("http")) {
+          viewerFrame.removeAttribute("srcdoc");
+          viewerFrame.src = baseUrl;
+          return;
+        }
+
+        const url = baseUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+        fetch(url + "?t=" + Date.now())
+          .then((response) => response.text())
+          .then((html) => {
+            viewerFrame.removeAttribute("src");
+            viewerFrame.srcdoc = html;
+            document.getElementById("viewerTitle").textContent = file.name;
+            document.getElementById("viewerTitle").dataset.zoneId = file.id;
+          })
+          .catch((error) => {
+            statusText.textContent = "failed to load zone: " + error;
+          });
+      }
+
+      async function loadGames(providerKey) {
+        if (providerKey === "recent" || providerKey === "popular" || providerKey === "zones" || providerKey === "all") {
+          await listZones();
+          return;
+        }
+
+        gameGrid.innerHTML = '<div class="empty">connecting to feeds...</div>';
+        await listZones();
+      }
+
+      async function openGame(game) {
+        currentGame = game;
+        viewerTitle.textContent = game.name || "game";
+        viewer.style.display = "block";
+        document.body.style.overflow = "hidden";
+
+        if (!game.url || !/^https?:\/\//i.test(game.url)) {
+          viewerFrame.removeAttribute("srcdoc");
+          viewerFrame.src = game.url || "about:blank";
+          return;
+        }
+
+        viewerTitle.textContent = `${game.name || "game"} loading...`;
+
+        try {
+          const response = await fetch(game.url, { cache: "no-store" });
+          const contentType = (response.headers.get("content-type") || "").toLowerCase();
+          const html = await response.text();
+          const looksLikeHtml = contentType.includes("text/html") || /^\s*<!doctype html/i.test(html) || /<html[\s>]/i.test(html);
+
+          if (looksLikeHtml) {
+            viewerFrame.removeAttribute("src");
+            viewerFrame.srcdoc = rewriteGameHtml(html, game.url);
+          } else {
+            viewerFrame.removeAttribute("srcdoc");
+            viewerFrame.src = game.url;
+          }
+        } catch (_) {
+          viewerFrame.removeAttribute("srcdoc");
+          viewerFrame.src = game.url;
+        }
+      }
+
+      function closeGame() {
+        viewer.style.display = "none";
+        viewerFrame.src = "about:blank";
+        document.body.style.overflow = "auto";
+        currentGame = null;
+      }
+
+      function fullscreenGame() {
+        const frame = viewerFrame;
+        if (frame.requestFullscreen) {
+          frame.requestFullscreen().catch(() => {});
+        }
+      }
+
+      let phraseIndex = 0;
+      let charIndex = 0;
+      let deleting = false;
+
+      function tick() {
+        const phrase = phrases[phraseIndex];
+        charIndex += deleting ? -1 : 1;
+        typed.textContent = phrase.slice(0, charIndex);
+
+        if (!deleting && charIndex === phrase.length) {
+          deleting = true;
+          setTimeout(tick, 1100);
+          return;
+        }
+
+        if (deleting && charIndex === 0) {
+          deleting = false;
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          setTimeout(tick, 250);
+          return;
+        }
+
+        setTimeout(tick, deleting ? 55 : 90);
+      }
+
+      accessGames.addEventListener("click", () => {
+        document.getElementById("gamesSection").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      searchBar.addEventListener("input", renderGames);
+      sortOptions.addEventListener("change", renderGames);
+      gameDatabaseSelect.addEventListener("change", () => loadGames(gameDatabaseSelect.value));
+      viewerClose.addEventListener("click", closeGame);
+      viewerFullscreen.addEventListener("click", fullscreenGame);
+      viewer.addEventListener("click", (event) => {
+        if (event.target === viewer) closeGame();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && viewer.style.display === "block") {
+          closeGame();
+        }
+      });
+
+      // search/autofill removed
+
+      suggestUiForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = gameName.value.trim();
+        if (!name) {
+          gameName.focus();
+          return;
+        }
+
+        entryGame.value = name;
+        entryType.value = gameType.value || "Previous HTML";
+
+        gformSubmit.submit();
+        suggestStatus.textContent = "Suggestion sent.";
+        suggestUiForm.reset();
+        gameType.value = "Previous HTML";
+      });
+
+      window.addEventListener("hashchange", applyRouteFromHash);
+
+      tick();
+      applyRouteFromHash();
+      loadGames(gameDatabaseSelect.value);
+    </script>
+  </body>
+</html>
